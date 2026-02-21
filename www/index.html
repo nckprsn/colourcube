@@ -385,20 +385,6 @@
 	</head>
 	<body>
 
-		<div class="ui">
-			<div class="colourspace_selector">
-				<select>
-					<option value='rgb'>RGB</option>
-					<option value='hsl'>HSL</option>
-					<option value='hsv'>HSV</option>
-					<option value='lab'>LAB</option>
-					<option value='oklab'>OKLAB</option>
-					<option value='lch'>LCH</option>
-					<option value='oklch'>OKLCH</option>
-				</select>
-			</div>
-		</div>
-
 		<div class="cube">
 			<div class="axes">
 				<div class="axis axis_x"></div>
@@ -554,6 +540,23 @@
 			</div>
 		</div>
 
+		<div class="ui">
+			<div class="colourspace_selector">
+				<label>
+					Colour space:
+					<select>
+						<option value='rgb'>RGB</option>
+						<option value='hsl'>HSL</option>
+						<option value='hsv'>HSV</option>
+						<option value='lab'>LAB</option>
+						<option value='oklab'>OKLAB</option>
+						<option value='lch'>LCH</option>
+						<option value='oklch'>OKLCH</option>
+					</select>
+				</label>
+			</div>
+		</div>
+
 		<script>
 
 			// --------------------------------------------------
@@ -639,7 +642,6 @@
 				this.$select = $container.querySelector( 'select' );
 
 				this.colourspace = this.$select.value;
-
 				
 				// Bind up our event handler(s) to this instance
 				this.on_change = this.on_change.bind( this );
@@ -658,12 +660,6 @@
 				this.$target.classList.remove( this.colourspace );
 				this.colourspace = this.$select.value;
 				this.$target.classList.add( this.colourspace );
-			}
-
-			// --------------------------------------------------
-
-			COLOURSPACE_SELECTOR.prototype.xxx = function()
-			{
 			}
 
 			// --------------------------------------------------
