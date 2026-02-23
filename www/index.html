@@ -613,6 +613,8 @@
 
 			DRAG_TO_ROTATE.prototype.start_drag = function( event )
 			{
+				event.preventDefault();
+
 				this.is_dragging = true;
 				this.$container.classList.add( 'is_dragging' );
 
@@ -631,6 +633,8 @@
 
 			DRAG_TO_ROTATE.prototype.end_drag = function( event )
 			{
+				event.preventDefault();
+
 				this.is_dragging = false;
 				this.$container.classList.remove( 'is_dragging' );
 
@@ -641,6 +645,8 @@
 
 			DRAG_TO_ROTATE.prototype.on_drag = function( event )
 			{
+				event.preventDefault();
+
  				const viewport_rect = event.currentTarget.getBoundingClientRect();
 				const pointer_x = Math.floor( event.clientX - viewport_rect.left );
 				const pointer_y = Math.floor( event.clientY - viewport_rect.top );
