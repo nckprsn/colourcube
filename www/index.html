@@ -3,7 +3,7 @@
 	<head>
 
 		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=0">
 
 		<title>Colour cube</title>
 		<meta name="description" content="A visualisation of named CSS colours in common colour spaces, in a cube.">
@@ -71,6 +71,9 @@
 				perspective: 999px;
 
 				transform-style: preserve-3d;
+
+				/* Indicate that we don't want the browser to pinch-zoom, pan, etc on touch */
+				touch-action: none;
 			}
 
 			/* -------------------------------------------------- */
@@ -592,21 +595,23 @@
 				this.rotate_x = 0;
 				this.rotate_y = 0;
 
-				this.rotate_origin_x = 0;
-				this.rotate_origin_y = 0;
-
-				this.drag_origin_x = 0;
-				this.drag_origin_y = 0;
+				this.previous_pointer_x = 0;
+				this.previous_pointer_y = 0;
 
 				// Bind up our event handler(s) to this instance
 				this.start_drag = this.start_drag.bind( this );
 				this.end_drag = this.end_drag.bind( this );
 				this.on_drag = this.on_drag.bind( this );
 
-				// Add mouse down/up event listeners
+				// Add mouse/pointer event listeners
+
 				this.$viewport.addEventListener( 'pointerdown' , this.start_drag );
 				this.$viewport.addEventListener( 'pointerup' , this.end_drag );
+
 				this.$viewport.addEventListener( 'pointerleave' , this.end_drag );
+				this.$viewport.addEventListener( 'pointercancel' , this.end_drag );
+
+				this.$viewport.addEventListener( 'pointermove' , this.on_drag );
 			}
 
 			// --------------------------------------------------
@@ -619,14 +624,34 @@
 				this.$container.classList.add( 'is_dragging' );
 
 				/* Remember where we started dragging from */
-				this.drag_origin_x = event.clientX;
-				this.drag_origin_y = event.clientY;
-				
-				/* Remember the rotation state we started dragging from */
-				this.rotate_origin_x = this.rotate_x;
-				this.rotate_origin_y = this.rotate_y;
+ 				const viewport_rect = event.currentTarget.getBoundingClientRect();
+				this.previous_pointer_x = Math.floor( event.clientX - viewport_rect.left );
+				this.previous_pointer_y = Math.floor( event.clientY - viewport_rect.top );
+			}
 
-				this.$viewport.addEventListener( 'pointermove' , this.on_drag );
+			// --------------------------------------------------
+
+			DRAG_TO_ROTATE.prototype.on_drag = function( event )
+			{
+				if( !this.is_dragging ) return;
+
+				event.preventDefault();
+
+ 				const viewport_rect = event.currentTarget.getBoundingClientRect();
+				const pointer_x = Math.floor( event.clientX - viewport_rect.left );
+				const pointer_y = Math.floor( event.clientY - viewport_rect.top );
+
+				const delta_x = pointer_x - this.previous_pointer_x;
+				const delta_y = pointer_y - this.previous_pointer_y;
+
+				this.previous_pointer_x = pointer_x;
+				this.previous_pointer_y = pointer_y;
+
+				this.rotate_x += delta_x * 0.001;
+				this.rotate_y += delta_y * 0.001;
+
+				this.$container.style.setProperty( '--rotate-x' , ( Math.round( this.rotate_x * 10000 ) / 10000 ) );
+				this.$container.style.setProperty( '--rotate-y' , ( Math.round( this.rotate_y * 10000 ) / 10000 ) );
 			}
 
 			// --------------------------------------------------
@@ -637,25 +662,6 @@
 
 				this.is_dragging = false;
 				this.$container.classList.remove( 'is_dragging' );
-
-				this.$viewport.removeEventListener( 'pointermove' , this.on_drag );
-			}
-
-			// --------------------------------------------------
-
-			DRAG_TO_ROTATE.prototype.on_drag = function( event )
-			{
-				event.preventDefault();
-
- 				const viewport_rect = event.currentTarget.getBoundingClientRect();
-				const pointer_x = Math.floor( event.clientX - viewport_rect.left );
-				const pointer_y = Math.floor( event.clientY - viewport_rect.top );
-
-				this.rotate_x = ( this.rotate_origin_x ) + ( pointer_x - this.drag_origin_x ) * 0.0025;
-				this.rotate_y = ( this.rotate_origin_y ) + ( pointer_y - this.drag_origin_y ) * 0.0025;
-
-				this.$container.style.setProperty( '--rotate-x' , ( Math.round( this.rotate_x * 10000 ) / 10000 ) );
-				this.$container.style.setProperty( '--rotate-y' , ( Math.round( this.rotate_y * 10000 ) / 10000 ) );
 			}
 
 			// --------------------------------------------------
