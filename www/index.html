@@ -647,8 +647,8 @@
 				this.previous_pointer_x = pointer_x;
 				this.previous_pointer_y = pointer_y;
 
-				this.rotate_x += delta_x * 0.001;
-				this.rotate_y += delta_y * 0.001;
+				this.rotate_x += delta_x * 0.0015;
+				this.rotate_y += delta_y * 0.0015;
 
 				this.$container.style.setProperty( '--rotate-x' , ( Math.round( this.rotate_x * 10000 ) / 10000 ) );
 				this.$container.style.setProperty( '--rotate-y' , ( Math.round( this.rotate_y * 10000 ) / 10000 ) );
