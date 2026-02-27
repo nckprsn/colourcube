@@ -36,11 +36,11 @@
 				overflow: hidden;
 
 				--cube-size: 50svmin;
-				
+
 				/* Matches the initial rotation values set in the JS module */
-				--cube-rotate-x: calc( var( --rotate-y , 0 ) * -360deg );
-				--cube-rotate-y: calc( var( --rotate-x , 0 ) * 360deg );
-				--cube-rotate-z: 0deg;
+				--cube-rotate-x: calc( var( --rotate-x , 0.05 ) * -360deg );
+				--cube-rotate-y: calc( var( --rotate-y , -0.05 ) *  360deg );
+				--cube-rotate-z: calc( var( --rotate-z , 0 ) *  360deg );
 
 				--node-size: calc( var( --cube-size ) / 6 );
 
@@ -51,11 +51,6 @@
 				--axis-width: 5px;
 				--axis-label-size: 1.5em;
 				--axis-arrow-size: 0.75em;
-			}
-
-			.colourcube.is_dragging
-			{
-				cursor: grab;
 			}
 
 			/* -------------------------------------------------- */
@@ -74,6 +69,13 @@
 
 				/* Indicate that we don't want the browser to pinch-zoom, pan, etc on touch */
 				touch-action: none;
+
+				cursor: grab;
+			}
+
+			.colourcube.is_dragging .viewport
+			{
+				cursor: grabbing;
 			}
 
 			/* -------------------------------------------------- */
@@ -90,9 +92,9 @@
 				transform-style: preserve-3d;
 
 				transform: /* Order matters! */
+				           rotateZ( var( --cube-rotate-z ) )
 				           rotateX( var( --cube-rotate-x ) )
-				           rotateY( var( --cube-rotate-y ) )
-				           rotateZ( var( --cube-rotate-z ) );
+				           rotateY( var( --cube-rotate-y ) );
 
 				transition: var( --node-transition );
 			}
@@ -131,22 +133,13 @@
 				           translateZ( calc( ( var( --z-axis ) - 0.5 ) * var( --cube-size ) ) )
 				           /* Rotate back to compensate for the container rotation */
 				           /* (order must be the reverse of container's) */
-				           rotateZ( calc( var( --cube-rotate-z ) * -1 ) )
 				           rotateY( calc( var( --cube-rotate-y ) * -1 ) )
-				           rotateX( calc( var( --cube-rotate-x ) * -1 ) );
+				           rotateX( calc( var( --cube-rotate-x ) * -1 ) )
+				           rotateZ( calc( var( --cube-rotate-z ) * -1 ) );
 
 				/* Sync with the container's transition */
 				transition: var( --node-transition );
 			}
-
-			/*
-			body:not( .is_dragging ) .node:hover
-			{
-				border: 4px solid white;
-				outline: 4px dashed black;
-				outline-offset: -4px;
-			}
-			*/
 
 			/* -------------------------------------------------- */
 
@@ -216,9 +209,9 @@
 				content: 'X';
 				transform: translatey( calc( var( --axis-size ) + var( --axis-label-size ) * -1/2 + var( --axis-width ) * -1/2 ) )
 				           translatex( calc( var( --axis-size ) ) )
-				           rotateZ( calc( var( --cube-rotate-z ) * -1 ) )
 				           rotateY( calc( var( --cube-rotate-y ) * -1 ) )
-				           rotateX( calc( var( --cube-rotate-x ) * -1 ) ); 
+				           rotateX( calc( var( --cube-rotate-x ) * -1 ) )
+				           rotateZ( calc( var( --cube-rotate-z ) * -1 ) );
 			}
 
 			/* ---------- */
@@ -240,9 +233,9 @@
 				content: 'Y';
 				transform: translateY( calc( var( --axis-label-size ) * -1 ) )
 				           translateX( calc( var( --axis-label-size ) * -1/2 + var( --axis-width ) * -1/2 ) )
-				           rotateZ( calc( var( --cube-rotate-z ) * -1 ) )
 				           rotateY( calc( var( --cube-rotate-y ) * -1 ) )
-				           rotateX( calc( var( --cube-rotate-x ) * -1 ) ); 
+				           rotateX( calc( var( --cube-rotate-x ) * -1 ) )
+				           rotateZ( calc( var( --cube-rotate-z ) * -1 ) );
 			}
 
 			/* ---------- */
@@ -265,9 +258,9 @@
 				transform: translateY( calc( var( --axis-size ) + var( --axis-label-size ) * -1/2 + var( --axis-width ) * -1/2 ) )
 				           translatex( calc( var( --axis-label-size ) * -1 ) ) 
 				           rotatey( -90deg )
-				           rotateZ( calc( var( --cube-rotate-z ) * -1 ) )
 				           rotateY( calc( var( --cube-rotate-y ) * -1 ) )
-				           rotateX( calc( var( --cube-rotate-x ) * -1 ) );
+				           rotateX( calc( var( --cube-rotate-x ) * -1 ) )
+				           rotateZ( calc( var( --cube-rotate-z ) * -1 ) );
 			}
 
 			/* -------------------------------------------------- */
@@ -377,9 +370,9 @@
 
 				pointer-events: none;
 			}
-			
+
 			/* -------------------------------------------------- */
-			
+
 			.colourspace_selector
 			{
 				pointer-events: auto;
@@ -592,8 +585,10 @@
 
 				this.is_dragging = false;
 
-				this.rotate_x = 0;
-				this.rotate_y = 0;
+				/* Initial rotation matches CSS var() fallbacks */
+				this.rotate_x = 0.05;
+				this.rotate_y = -0.05;
+				this.rotate_z = 0;
 
 				this.previous_pointer_x = 0;
 				this.previous_pointer_y = 0;
@@ -641,17 +636,37 @@
 				const pointer_x = Math.floor( event.clientX - viewport_rect.left );
 				const pointer_y = Math.floor( event.clientY - viewport_rect.top );
 
-				const delta_x = pointer_x - this.previous_pointer_x;
-				const delta_y = pointer_y - this.previous_pointer_y;
+				const delta_x = pointer_y - this.previous_pointer_y;
+				const delta_y = pointer_x - this.previous_pointer_x;
 
 				this.previous_pointer_x = pointer_x;
 				this.previous_pointer_y = pointer_y;
 
-				this.rotate_x += delta_x * 0.0015;
-				this.rotate_y += delta_y * 0.0015;
+				// ----------
+
+					this.rotate_x += delta_x * 0.0015;
+					this.rotate_y += delta_y * 0.0015;
+					this.rotate_z = 0;
+
+				// ----------
+
+					// const rotation = this.apply_rotations(
+					// 	this.rotate_x * 2 * Math.PI,
+					// 	this.rotate_y * 2 * Math.PI,
+					// 	this.rotate_z * 2 * Math.PI,
+					// 	delta_x * 0.0015 * 2 * Math.PI,
+					// 	delta_y * 0.0015 * 2 * Math.PI 
+					// );
+
+					// this.rotate_x = rotation.x / ( 2 * Math.PI ),
+					// this.rotate_y = rotation.y / ( 2 * Math.PI ),
+					// this.rotate_z = rotation.z / ( 2 * Math.PI ),
+
+				// ----------
 
 				this.$container.style.setProperty( '--rotate-x' , ( Math.round( this.rotate_x * 10000 ) / 10000 ) );
 				this.$container.style.setProperty( '--rotate-y' , ( Math.round( this.rotate_y * 10000 ) / 10000 ) );
+				this.$container.style.setProperty( '--rotate-z' , ( Math.round( this.rotate_z * 10000 ) / 10000 ) );
 			}
 
 			// --------------------------------------------------
@@ -666,6 +681,17 @@
 
 			// --------------------------------------------------
 
+			// DRAG_TO_ROTATE.prototype.apply_rotations = function( x1 , y1 , z1 , x2 , y2 )
+			// {
+			// 	return {
+			// 		x: x1,
+			// 		y: y1,
+			// 		z: z1,
+			// 	};
+			// }
+
+			// --------------------------------------------------
+
 			const COLOURSPACE_SELECTOR = function( $container , $target )
 			{
 				this.$container = $container;
@@ -674,10 +700,10 @@
 				this.$select = $container.querySelector( 'select' );
 
 				this.colourspace = this.$select.value;
-				
+
 				// Bind up our event handler(s) to this instance
 				this.on_change = this.on_change.bind( this );
-				
+
 				// Listen out for changes
 				this.$select.addEventListener( 'change' , this.on_change );
 
